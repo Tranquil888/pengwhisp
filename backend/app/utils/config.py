@@ -45,16 +45,16 @@ API_CONFIG = {
     'rate_limit_delay': 2.0,  # seconds between Reddit requests
     'cache_ttl': 300,  # seconds (5 minutes)
     'max_posts_per_request': 100,
-    'importance_threshold': 0.0,  # minimum importance score for river feed (set to 0 for debugging)
+    'importance_threshold': 0.15,  # minimum importance score for river feed (filters low-quality posts)
     'default_subreddit': 'technology'
 }
 
 # Importance scoring weights
 IMPORTANCE_WEIGHTS = {
-    'engagement_weight': 0.4,  # score + comments
-    'recency_weight': 0.3,     # newer posts get higher weight
-    'tech_relevance_weight': 0.2,  # tech keyword presence
-    'sentiment_weight': 0.1    # sentiment bonus
+    'engagement_weight': 0.15,  # score + comments (reduced)
+    'recency_weight': 0.45,     # newer posts get higher weight (increased)
+    'tech_relevance_weight': 0.3,  # tech keyword presence (increased)
+    'sentiment_weight': 0.1    # sentiment bonus (unchanged)
 }
 
 # Sentiment thresholds

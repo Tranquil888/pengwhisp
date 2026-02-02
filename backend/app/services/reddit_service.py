@@ -58,22 +58,29 @@ class RedditService:
         """Parse raw Reddit post data into RedditPost model"""
         try:
             # Extract post data
-            data = post_data.get("data", {})
+            data = post_data.get("data", {}) if isinstance(post_data, dict) and "data" in post_data else post_data
             
             # Skip if post is deleted or removed
             if data.get("removed_by_category") or data.get("selftext") == "[removed]":
+                logger.info("Skipping removed/deleted post")
                 return None
             
-            # Combine title and body text
+            # Get basic fields
+            post_id = data.get("id", "")
             title = data.get("title", "")
             body = data.get("selftext", "")
+            
+            # Skip posts with no ID or title
+            if not post_id or not title:
+                logger.warning(f"Skipping post with no ID or title: ID='{post_id}', Title='{title[:30]}'")
+                return None
             
             # Create combined text for analysis
             combined_text = self.text_processor.combine_title_body(title, body)
             
             # Create RedditPost object
             reddit_post = RedditPost(
-                id=data.get("id", ""),
+                id=post_id,
                 title=title,
                 text=combined_text,
                 url=f"https://reddit.com{data.get('permalink', '')}",
@@ -84,6 +91,7 @@ class RedditService:
                 subreddit=subreddit
             )
             
+            logger.info(f"Successfully parsed post: {post_id} - {title[:50]}")
             return reddit_post
             
         except Exception as e:
@@ -115,9 +123,26 @@ class RedditService:
         try:
             # Extract posts from response
             children = response_data.get("data", {}).get("children", [])
+            logger.info(f"Number of children found: {len(children)}")
             
-            for child in children:
-                post_data = child.get("data", {})
+            for i, child in enumerate(children):
+                # Skip invalid children
+                if not isinstance(child, dict):
+                    continue
+                
+                if "data" not in child:
+                    continue
+                
+                post_data = child["data"]
+                
+                # Skip empty post data
+                if not post_data or not isinstance(post_data, dict):
+                    continue
+                
+                # Skip posts with no ID or title
+                if not post_data.get("id") or not post_data.get("title"):
+                    continue
+                
                 reddit_post = self._parse_reddit_post(post_data, subreddit)
                 
                 if reddit_post:

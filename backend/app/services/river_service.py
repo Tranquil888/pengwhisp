@@ -71,14 +71,22 @@ class RiverService:
         combined_engagement = score + (comments * 2)
         
         if combined_engagement <= 0:
-            return 0.0
+            # Give small base score for new posts with 0 engagement
+            return 0.1
         
-        # Logarithmic scaling with base 10
-        # log10(1) = 0, log10(10) = 1, log10(100) = 2, etc.
+        # Logarithmic scaling with base 10, but with a minimum score
         log_score = math.log10(max(combined_engagement, 1))
         
-        # Normalize to 0-1 range (assuming max reasonable score is around 10^4)
-        normalized_score = min(log_score / 4.0, 1.0)
+        # Normalize to 0-1 range with better scaling for low engagement
+        if combined_engagement <= 5:
+            # Give reasonable scores for very low engagement (1-5)
+            normalized_score = 0.1 + (combined_engagement / 5.0) * 0.3
+        elif combined_engagement <= 50:
+            # Medium engagement
+            normalized_score = 0.4 + ((combined_engagement - 5) / 45.0) * 0.4
+        else:
+            # High engagement - use log scaling
+            normalized_score = min(0.8 + (log_score / 6.0) * 0.2, 1.0)
         
         return normalized_score
     
@@ -91,22 +99,25 @@ class RiverService:
         
         if age_hours <= 1:
             return 1.0  # Very recent posts get full score
+        elif age_hours <= 6:
+            # Linear decay over 6 hours
+            return 1.0 - (age_hours - 1) / 5.0 * 0.3
         elif age_hours <= 24:
-            # Linear decay over 24 hours
-            return 1.0 - (age_hours - 1) / 23.0 * 0.5
+            # Slower decay over next 18 hours
+            return 0.7 - (age_hours - 6) / 18.0 * 0.4
         elif age_hours <= 168:  # 1 week
-            # Slower decay over the next 6 days
-            return 0.5 - (age_hours - 24) / 144.0 * 0.3
+            # Even slower decay over the next 6 days
+            return 0.3 - (age_hours - 24) / 144.0 * 0.2
         else:
             # Minimal score for posts older than 1 week
-            return max(0.2 - (age_hours - 168) / 720.0 * 0.2, 0.0)
+            return max(0.1 - (age_hours - 168) / 720.0 * 0.1, 0.0)
     
     def _calculate_tech_relevance_score(self, tech_tags: List[str]) -> float:
         """
         Calculate tech relevance score from detected tags
         """
         if not tech_tags:
-            return 0.0
+            return 0.05  # Give small base score instead of 0
         
         # Base score from number of unique tags
         tag_score = min(len(tech_tags) / 5.0, 1.0)  # Cap at 5 unique tags
@@ -114,7 +125,7 @@ class RiverService:
         # Bonus for high-value categories (calculated via relevance service)
         # This is already incorporated in the tag extraction, so we just use the count
         
-        return tag_score
+        return max(tag_score, 0.1)  # Ensure minimum score if tags exist
     
     def _calculate_sentiment_score(self, sentiment: SentimentResult) -> float:
         """
