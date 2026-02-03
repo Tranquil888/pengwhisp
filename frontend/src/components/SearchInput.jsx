@@ -5,7 +5,8 @@ const SearchInput = ({ onSubredditChange, isLoading }) => {
   const [inputValue, setInputValue] = useState('technology');
   const [suggestions] = useState([
     'technology', 'programming', 'MachineLearning', 'webdev', 
-    'python', 'javascript', 'reactjs', 'datascience'
+    'python', 'javascript', 'reactjs', 'datascience', 'AI', 'cloud',
+    'cybersecurity', 'blockchain', 'mobile', 'gamedev', 'database'
   ]);
 
   const handleSubmit = (e) => {

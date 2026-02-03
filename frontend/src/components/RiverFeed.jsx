@@ -8,6 +8,7 @@ const RiverFeed = ({ subreddit, onLoadingChange }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [searchMethod, setSearchMethod] = useState('direct');
 
   useEffect(() => {
     loadPosts();
@@ -23,10 +24,12 @@ const RiverFeed = ({ subreddit, onLoadingChange }) => {
     try {
       const response = await fetchRiverFeed('reddit', subreddit, 50);
       setPosts(response.posts || []);
+      setSearchMethod(response.search_method || 'direct');
       setLastUpdated(new Date());
     } catch (err) {
       setError(err.message);
       setPosts([]);
+      setSearchMethod('direct');
     } finally {
       setLoading(false);
       onLoadingChange(false);
@@ -89,6 +92,12 @@ const RiverFeed = ({ subreddit, onLoadingChange }) => {
     <div className="river-feed">
       <div className="river-header">
         <h2>r/{subreddit} River Feed</h2>
+        {searchMethod === 'fallback' && (
+          <div className="fallback-indicator">
+            <span className="fallback-badge">🔍 Smart Search</span>
+            <span className="fallback-text">Found related content from similar subreddits</span>
+          </div>
+        )}
         <div className="river-stats">
           <span className="post-count">{posts.length} important posts</span>
           {lastUpdated && (

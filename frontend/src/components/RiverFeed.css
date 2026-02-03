@@ -21,6 +21,31 @@
   gap: 1rem;
   color: #64748b;
   font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.fallback-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.fallback-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.fallback-text {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-style: italic;
 }
 
 .post-count {
