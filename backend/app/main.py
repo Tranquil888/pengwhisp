@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import logging
@@ -61,7 +61,11 @@ async def _try_fallback_search(query: str, limit: int) -> List[Post]:
                             tech_tags=tech_tags,
                             created_at=post.created_at,
                             score=post.score,
-                            comments=post.comments
+                            comments=post.comments,
+                            image_url=post.image_url,
+                            thumbnail_url=post.thumbnail_url,
+                            post_hint=post.post_hint,
+                            has_image=post.has_image
                         )
                         all_posts.append(processed_post)
                     
@@ -162,6 +166,67 @@ async def root():
     """Health check endpoint"""
     return {"status": "healthy", "message": "Tech Relevance & Sentiment Analyzer API"}
 
+@app.get("/api/proxy/image")
+async def proxy_image(url: str = Query(...)):
+    """
+    Proxy image requests to avoid CORS issues
+    
+    Args:
+        url: Image URL to proxy (passed as query parameter)
+        
+    Returns:
+        Proxied image content
+    """
+    try:
+        # Log the URL for debugging
+        logger.info(f"Proxying image: {url}")
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "image",
+            "Sec-Fetch-Mode": "no-cors",
+            "Sec-Fetch-Site": "cross-site",
+            "Referer": "https://www.reddit.com/"
+        }
+        
+        timeout = aiohttp.ClientTimeout(total=30)
+        
+        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
+            async with session.get(url) as response:
+                logger.info(f"Image response status: {response.status}")
+                
+                if response.status == 200:
+                    # Get content type from response
+                    content_type = response.headers.get('content-type', 'image/jpeg')
+                    
+                    # Return image content with proper headers
+                    content = await response.read()
+                    logger.info(f"Successfully proxied image, size: {len(content)} bytes")
+                    
+                    return Response(
+                        content=content,
+                        media_type=content_type,
+                        headers={
+                            "Cache-Control": "public, max-age=3600",
+                            "Access-Control-Allow-Origin": "*"
+                        }
+                    )
+                else:
+                    logger.error(f"Failed to fetch image, status: {response.status}")
+                    error_text = await response.text()
+                    logger.error(f"Error response: {error_text}")
+                    raise HTTPException(status_code=response.status, detail=f"Failed to fetch image: {response.status}")
+                    
+    except Exception as e:
+        logger.error(f"Error proxying image {url}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to proxy image: {str(e)}")
+
 @app.get("/api/river", response_model=RiverResponse)
 async def get_river(
     source: str = "reddit",
@@ -259,7 +324,11 @@ async def get_river(
                 tech_tags=tech_tags,
                 created_at=post.created_at,
                 score=post.score,
-                comments=post.comments
+                comments=post.comments,
+                image_url=post.image_url,
+                thumbnail_url=post.thumbnail_url,
+                post_hint=post.post_hint,
+                has_image=post.has_image
             )
             
             processed_posts.append(processed_post)

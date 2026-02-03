@@ -75,6 +75,44 @@ class RedditService:
                 logger.warning(f"Skipping post with no ID or title: ID='{post_id}', Title='{title[:30]}'")
                 return None
             
+            # Extract image data
+            image_url = None
+            thumbnail_url = None
+            post_hint = data.get("post_hint", "")
+            has_image = False
+            
+            # Check if this is an image post
+            if post_hint == "image":
+                # Get the main image URL
+                image_url = data.get("url", "")
+                
+                # Get thumbnail URL
+                thumbnail_url = data.get("thumbnail", "")
+                
+                # Try to get higher quality image from preview
+                preview = data.get("preview", {})
+                if preview and preview.get("images"):
+                    images = preview["images"]
+                    if images and len(images) > 0:
+                        source = images[0].get("source", {})
+                        if source.get("url"):
+                            image_url = source["url"]
+                
+                # Fix HTML entity decoding (Reddit API returns &amp; instead of &)
+                if image_url:
+                    import html
+                    image_url = html.unescape(image_url)
+                    logger.info(f"Extracted image URL: {image_url}")
+                
+                if thumbnail_url:
+                    import html
+                    thumbnail_url = html.unescape(thumbnail_url)
+                
+                # Set has_image flag if we have valid URLs
+                has_image = bool(image_url and image_url != "" and image_url != "self")
+                
+                logger.info(f"Post {post_id} - has_image: {has_image}, image_url: {image_url[:100] if image_url else 'None'}")
+            
             # Create combined text for analysis
             combined_text = self.text_processor.combine_title_body(title, body)
             
@@ -88,10 +126,14 @@ class RedditService:
                 score=data.get("score", 0),
                 comments=data.get("num_comments", 0),
                 author=data.get("author", ""),
-                subreddit=subreddit
+                subreddit=subreddit,
+                image_url=image_url,
+                thumbnail_url=thumbnail_url,
+                post_hint=post_hint,
+                has_image=has_image
             )
             
-            logger.info(f"Successfully parsed post: {post_id} - {title[:50]}")
+            logger.info(f"Successfully parsed post: {post_id} - {title[:50]} (has_image: {has_image})")
             return reddit_post
             
         except Exception as e:

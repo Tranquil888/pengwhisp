@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './PostCard.css';
 
 const PostCard = ({ post }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   const getSentimentColor = (label) => {
     switch (label) {
       case 'positive':
@@ -44,6 +48,54 @@ const PostCard = ({ post }) => {
     return text.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';
   };
 
+  const handleToggleExpand = () => {
+    if (isExpanded) {
+      setIsExpanded(false);
+      setImageLoaded(false);
+      setImageError(false);
+    } else {
+      setIsExpanded(true);
+      console.log('Expanding post with image:', {
+        has_image: post.has_image,
+        image_url: post.image_url,
+        thumbnail_url: post.thumbnail_url,
+        post_hint: post.post_hint
+      });
+    }
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  // Function to handle image URL with fallback strategy
+  const getImageUrl = (url, thumbnailUrl) => {
+    if (!url) return thumbnailUrl;
+    return url; // Try direct URL first
+  };
+
+  const getFallbackUrl = (thumbnailUrl) => {
+    return thumbnailUrl;
+  };
+
+  const handleImageError = (e) => {
+    console.error('Image failed to load:', {
+      src: e.target.src,
+      alt: e.target.alt,
+      error: e
+    });
+    
+    // If we haven't tried thumbnail yet, try it as fallback
+    if (post.thumbnail_url && !e.target.src.includes('thumbnail')) {
+      console.log('Trying thumbnail fallback...');
+      e.target.src = post.thumbnail_url;
+      setImageError(false); // Reset error state to try again
+    } else {
+      // If both failed, show error
+      setImageError(true);
+    }
+  };
+
   return (
     <div className="post-card">
       <div className="post-header">
@@ -62,6 +114,53 @@ const PostCard = ({ post }) => {
       <div className="post-content">
         <p className="post-text">{truncateText(post.text)}</p>
       </div>
+      
+      {/* Show Full Post Button */}
+      {post.has_image && (
+        <div className="post-image-toggle">
+          <button 
+            onClick={handleToggleExpand}
+            className="show-full-post-btn"
+          >
+            {isExpanded ? 'Hide' : 'Show'} Full Post {post.has_image && '🖼️'}
+          </button>
+        </div>
+      )}
+
+      {/* Expanded Image Section */}
+      {isExpanded && post.image_url && (
+        <div className="post-image-container">
+          {!imageLoaded && !imageError && (
+            <div className="image-loader">
+              <div className="spinner"></div>
+              <p>Loading image...</p>
+            </div>
+          )}
+          
+          {imageError ? (
+            <div className="image-error">
+              <p>❌ Failed to load image</p>
+              <small>The image may have been removed or is unavailable</small>
+              <button 
+                onClick={handleToggleExpand}
+                className="retry-image-btn"
+                style={{ marginTop: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : (
+            <img 
+              src={getImageUrl(post.image_url, post.thumbnail_url)}
+              alt={post.title}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              style={{ display: imageLoaded ? 'block' : 'none' }}
+              className="post-image"
+            />
+          )}
+        </div>
+      )}
       
       <div className="post-footer">
         <div className="post-tags">

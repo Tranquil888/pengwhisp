@@ -141,6 +141,115 @@
   text-decoration: underline;
 }
 
+/* Image Display Styles */
+.post-image-toggle {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.show-full-post-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.show-full-post-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.show-full-post-btn:active {
+  transform: translateY(0);
+}
+
+.post-image-container {
+  margin: 1rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f8fafc;
+  min-height: 200px;
+  position: relative;
+}
+
+.post-image {
+  width: 100%;
+  height: auto;
+  max-height: 600px;
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.image-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #64748b;
+}
+
+.image-loader .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.image-loader p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #ef4444;
+  text-align: center;
+  padding: 1rem;
+}
+
+.image-error p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.image-error small {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .post-card {
@@ -173,5 +282,25 @@
   
   .post-actions {
     text-align: left;
+  }
+
+  /* Mobile image adjustments */
+  .show-full-post-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+  }
+
+  .post-image-container {
+    margin: 0.75rem 0;
+    min-height: 150px;
+  }
+
+  .post-image {
+    max-height: 400px;
+  }
+
+  .image-loader,
+  .image-error {
+    height: 150px;
   }
 }

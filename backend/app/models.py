@@ -18,6 +18,10 @@ class RedditPost(BaseModel):
     comments: int
     author: str
     subreddit: str
+    image_url: Optional[str] = None  # Direct image URL
+    thumbnail_url: Optional[str] = None  # Thumbnail URL
+    post_hint: Optional[str] = None  # Post type indicator (e.g., "image")
+    has_image: bool = False  # Quick boolean check for image presence
 
 class Post(BaseModel):
     """Processed post with analysis results"""
@@ -31,6 +35,10 @@ class Post(BaseModel):
     created_at: datetime
     score: int
     comments: int
+    image_url: Optional[str] = None  # Direct image URL
+    thumbnail_url: Optional[str] = None  # Thumbnail URL
+    post_hint: Optional[str] = None  # Post type indicator (e.g., "image")
+    has_image: bool = False  # Quick boolean check for image presence
 
 class RiverResponse(BaseModel):
     """API response for river feed"""
