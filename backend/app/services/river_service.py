@@ -66,9 +66,10 @@ class RiverService:
         """
         Calculate engagement score from Reddit score and comments
         Uses logarithmic scaling to prevent very high scores from dominating
+        Comments weighted more heavily to indicate discussion quality
         """
-        # Combine score and comments (comments weighted more heavily)
-        combined_engagement = score + (comments * 2)
+        # Combine score and comments (comments weighted more heavily - increased from 2x to 3x)
+        combined_engagement = score + (comments * 3)
         
         if combined_engagement <= 0:
             # Give small base score for new posts with 0 engagement
@@ -84,48 +85,68 @@ class RiverService:
         elif combined_engagement <= 50:
             # Medium engagement
             normalized_score = 0.4 + ((combined_engagement - 5) / 45.0) * 0.4
+        elif combined_engagement <= 200:
+            # High engagement - improved scaling
+            normalized_score = 0.8 + ((combined_engagement - 50) / 150.0) * 0.15
         else:
-            # High engagement - use log scaling
-            normalized_score = min(0.8 + (log_score / 6.0) * 0.2, 1.0)
+            # Very high engagement - use log scaling with better discrimination
+            normalized_score = min(0.95 + (log_score / 8.0) * 0.05, 1.0)
+        
+        # Quality bonus for discussion-heavy posts (high comment-to-upvote ratio)
+        if score > 0:
+            comment_ratio = comments / score
+            if comment_ratio > 2.0:  # More than 2 comments per upvote
+                normalized_score = min(normalized_score + 0.05, 1.0)
         
         return normalized_score
     
     def _calculate_recency_score(self, created_at: datetime) -> float:
         """
         Calculate recency score (newer posts get higher weight)
+        Slower decay curve with extended high-score window
         """
         now = datetime.now()
         age_hours = (now - created_at).total_seconds() / 3600
         
-        if age_hours <= 1:
-            return 1.0  # Very recent posts get full score
-        elif age_hours <= 6:
-            # Linear decay over 6 hours
-            return 1.0 - (age_hours - 1) / 5.0 * 0.3
+        if age_hours <= 6:
+            return 1.0  # Extended high-score window from 1 hour to 6 hours
         elif age_hours <= 24:
-            # Slower decay over next 18 hours
-            return 0.7 - (age_hours - 6) / 18.0 * 0.4
+            # Slower linear decay over next 18 hours
+            return 1.0 - (age_hours - 6) / 18.0 * 0.3
+        elif age_hours <= 72:  # 3 days (extended from 1 week)
+            # Even slower decay over the next 2 days
+            return 0.7 - (age_hours - 24) / 48.0 * 0.3
         elif age_hours <= 168:  # 1 week
-            # Even slower decay over the next 6 days
-            return 0.3 - (age_hours - 24) / 144.0 * 0.2
+            # Minimal decay for the rest of the week
+            return max(0.4 - (age_hours - 72) / 96.0 * 0.2, 0.2)
         else:
             # Minimal score for posts older than 1 week
-            return max(0.1 - (age_hours - 168) / 720.0 * 0.1, 0.0)
+            return max(0.2 - (age_hours - 168) / 720.0 * 0.1, 0.1)
     
     def _calculate_tech_relevance_score(self, tech_tags: List[str]) -> float:
         """
         Calculate tech relevance score from detected tags
+        Smoother scaling with reduced maximum impact
         """
         if not tech_tags:
             return 0.05  # Give small base score instead of 0
         
-        # Base score from number of unique tags
-        tag_score = min(len(tech_tags) / 5.0, 1.0)  # Cap at 5 unique tags
+        # Base score from number of unique tags with smoother scaling
+        tag_count = len(tech_tags)
         
-        # Bonus for high-value categories (calculated via relevance service)
-        # This is already incorporated in the tag extraction, so we just use the count
+        if tag_count == 1:
+            tag_score = 0.3  # Single tag gets moderate score
+        elif tag_count == 2:
+            tag_score = 0.5  # Two tags get good score
+        elif tag_count == 3:
+            tag_score = 0.7  # Three tags get high score
+        elif tag_count <= 5:
+            tag_score = 0.85  # 4-5 tags get very high score
+        else:
+            tag_score = 1.0  # More than 5 tags gets maximum score
         
-        return max(tag_score, 0.1)  # Ensure minimum score if tags exist
+        # Apply smoother scaling to reduce impact
+        return max(tag_score * 0.8, 0.1)  # Scale down and ensure minimum
     
     def _calculate_sentiment_score(self, sentiment: SentimentResult) -> float:
         """

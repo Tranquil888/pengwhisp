@@ -98,6 +98,12 @@ const RiverFeed = ({ subreddit, onLoadingChange }) => {
             <span className="fallback-text">Found related content from similar subreddits</span>
           </div>
         )}
+        {searchMethod === 'multi_source' && (
+          <div className="multi-source-indicator">
+            <span className="multi-source-badge">🔄 Multi-Source</span>
+            <span className="multi-source-text">Content from r/{subreddit} and related subreddits</span>
+          </div>
+        )}
         <div className="river-stats">
           <span className="post-count">{posts.length} important posts</span>
           {lastUpdated && (

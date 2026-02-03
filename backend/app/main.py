@@ -17,6 +17,115 @@ from .cache import Cache
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+async def _fetch_from_multiple_sources(subreddit_name: str, limit: int) -> List[Post]:
+    """
+    Fetch posts from multiple related subreddits for better content diversity
+    
+    Args:
+        subreddit_name: Primary subreddit name
+        limit: Maximum number of posts to return
+        
+    Returns:
+        List of posts from multiple sources
+    """
+    all_posts = []
+    seen_post_ids = set()
+    
+    # Always fetch from the primary subreddit first
+    try:
+        logger.info(f"Fetching posts from primary subreddit: r/{subreddit_name}")
+        primary_posts = await reddit_service.fetch_posts(subreddit_name)
+        
+        if primary_posts:
+            for post in primary_posts:
+                if post.id not in seen_post_ids:
+                    sentiment = sentiment_service.analyze_sentiment(post.text)
+                    tech_tags = relevance_service.extract_tech_tags(post.text)
+                    importance = river_service.calculate_importance(post, sentiment, tech_tags)
+                    
+                    processed_post = Post(
+                        id=post.id,
+                        text=post.text,
+                        url=post.url,
+                        importance_score=importance,
+                        sentiment_label=sentiment.label,
+                        sentiment_score=sentiment.score,
+                        tech_tags=tech_tags,
+                        created_at=post.created_at,
+                        score=post.score,
+                        comments=post.comments,
+                        image_url=post.image_url,
+                        thumbnail_url=post.thumbnail_url,
+                        post_hint=post.post_hint,
+                        has_image=post.has_image
+                    )
+                    all_posts.append(processed_post)
+                    seen_post_ids.add(post.id)
+            
+            logger.info(f"Found {len(primary_posts)} posts from r/{subreddit_name}")
+    except Exception as e:
+        logger.warning(f"Error fetching from primary subreddit r/{subreddit_name}: {str(e)}")
+    
+    # Find related subreddits for additional sources
+    try:
+        related_suggestions = await subreddit_search_service.search_subreddits(subreddit_name, 2)
+        
+        for suggestion in related_suggestions:
+            if suggestion.name.lower() == subreddit_name.lower():
+                continue  # Skip if it's the same as primary
+                
+            try:
+                logger.info(f"Fetching posts from related subreddit: r/{suggestion.name}")
+                related_posts = await reddit_service.fetch_posts(suggestion.name)
+                
+                if related_posts:
+                    for post in related_posts:
+                        if post.id not in seen_post_ids:
+                            sentiment = sentiment_service.analyze_sentiment(post.text)
+                            tech_tags = relevance_service.extract_tech_tags(post.text)
+                            importance = river_service.calculate_importance(post, sentiment, tech_tags)
+                            
+                            processed_post = Post(
+                                id=post.id,
+                                text=post.text,
+                                url=post.url,
+                                importance_score=importance,
+                                sentiment_label=sentiment.label,
+                                sentiment_score=sentiment.score,
+                                tech_tags=tech_tags,
+                                created_at=post.created_at,
+                                score=post.score,
+                                comments=post.comments,
+                                image_url=post.image_url,
+                                thumbnail_url=post.thumbnail_url,
+                                post_hint=post.post_hint,
+                                has_image=post.has_image
+                            )
+                            all_posts.append(processed_post)
+                            seen_post_ids.add(post.id)
+                    
+                    logger.info(f"Found {len(related_posts)} posts from r/{suggestion.name}")
+                    
+                    # Stop if we have enough posts
+                    if len(all_posts) >= limit * 2:  # Get more than needed for better filtering
+                        break
+                        
+            except Exception as e:
+                logger.warning(f"Error fetching from related subreddit r/{suggestion.name}: {str(e)}")
+                continue
+                
+    except Exception as e:
+        logger.warning(f"Error finding related subreddits: {str(e)}")
+    
+    if all_posts:
+        # Sort by importance and return top posts
+        all_posts.sort(key=lambda x: x.importance_score, reverse=True)
+        logger.info(f"Multi-source search found {len(all_posts)} total posts from {len(seen_post_ids)} unique posts")
+        return all_posts
+    else:
+        logger.info(f"No posts found from any sources for subreddit: {subreddit_name}")
+        return []
+
 async def _try_fallback_search(query: str, limit: int) -> List[Post]:
     """
     Try to find posts from related subreddits when exact match fails
@@ -263,11 +372,11 @@ async def get_river(
             logger.info(f"Returning cached posts for {cache_key}")
             return RiverResponse(posts=cached_posts[:limit], source=source, name=validated_name)
         
-        # Fetch fresh data
-        logger.info(f"Fetching posts from r/{validated_name}")
-        reddit_posts = await reddit_service.fetch_posts(validated_name)
+        # Fetch fresh data using multi-source aggregation
+        logger.info(f"Fetching posts from multiple sources for r/{validated_name}")
+        multi_source_posts = await _fetch_from_multiple_sources(validated_name, limit)
         
-        if not reddit_posts:
+        if not multi_source_posts:
             # Check if this is a subreddit not found error vs empty subreddit
             if await _is_subreddit_not_found(validated_name):
                 logger.info(f"Subreddit r/{validated_name} not found, trying fallback search")
@@ -299,42 +408,8 @@ async def get_river(
                     headers={"X-Error-Type": "no_posts_found"}
                 )
         
-        # Process posts
-        processed_posts = []
-        for post in reddit_posts:
-            # Analyze sentiment
-            sentiment = sentiment_service.analyze_sentiment(post.text)
-            
-            # Detect tech relevance
-            tech_tags = relevance_service.extract_tech_tags(post.text)
-            
-            # Calculate importance score
-            importance = river_service.calculate_importance(
-                post, sentiment, tech_tags
-            )
-            
-            # Create processed post
-            processed_post = Post(
-                id=post.id,
-                text=post.text,
-                url=post.url,
-                importance_score=importance,
-                sentiment_label=sentiment.label,
-                sentiment_score=sentiment.score,
-                tech_tags=tech_tags,
-                created_at=post.created_at,
-                score=post.score,
-                comments=post.comments,
-                image_url=post.image_url,
-                thumbnail_url=post.thumbnail_url,
-                post_hint=post.post_hint,
-                has_image=post.has_image
-            )
-            
-            processed_posts.append(processed_post)
-        
         # Filter by importance threshold and sort
-        filtered_posts = river_service.filter_and_sort(processed_posts)
+        filtered_posts = river_service.filter_and_sort(multi_source_posts)
         
         # Cache the results
         cache.set(cache_key, filtered_posts)
@@ -342,7 +417,8 @@ async def get_river(
         return RiverResponse(
             posts=filtered_posts[:limit],
             source=source,
-            name=validated_name
+            name=validated_name,
+            search_method="multi_source"
         )
         
     except Exception as e:

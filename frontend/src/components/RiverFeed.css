@@ -48,6 +48,30 @@
   font-style: italic;
 }
 
+.multi-source-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.multi-source-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.multi-source-text {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
 .post-count {
   background-color: #f1f5f9;
   padding: 0.25rem 0.75rem;

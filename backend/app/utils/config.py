@@ -51,9 +51,9 @@ API_CONFIG = {
 
 # Importance scoring weights
 IMPORTANCE_WEIGHTS = {
-    'engagement_weight': 0.15,  # score + comments (reduced)
-    'recency_weight': 0.45,     # newer posts get higher weight (increased)
-    'tech_relevance_weight': 0.3,  # tech keyword presence (increased)
+    'engagement_weight': 0.4,   # score + comments (increased from 0.15)
+    'recency_weight': 0.25,     # newer posts get higher weight (reduced from 0.45)
+    'tech_relevance_weight': 0.25,  # tech keyword presence (reduced from 0.3)
     'sentiment_weight': 0.1    # sentiment bonus (unchanged)
 }
 
