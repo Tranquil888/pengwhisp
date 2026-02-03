@@ -9,7 +9,7 @@
 }
 
 .river-header h2 {
-  color: #1e293b;
+  color: #f1f5f9;
   margin: 0 0 0.5rem 0;
   font-size: 1.75rem;
   font-weight: 700;
@@ -19,7 +19,7 @@
   display: flex;
   justify-content: center;
   gap: 1rem;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.9rem;
   margin-top: 0.5rem;
 }
@@ -43,7 +43,7 @@
 }
 
 .fallback-text {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.85rem;
   font-style: italic;
 }
@@ -67,13 +67,14 @@
 }
 
 .multi-source-text {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.85rem;
   font-style: italic;
 }
 
 .post-count {
-  background-color: #f1f5f9;
+  background-color: #334155;
+  color: #e2e8f0;
   padding: 0.25rem 0.75rem;
   border-radius: 16px;
   font-weight: 500;
@@ -90,7 +91,7 @@
 .river-footer {
   text-align: center;
   padding-top: 2rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #475569;
 }
 
 .refresh-button {
@@ -112,7 +113,7 @@
 }
 
 .disclaimer {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.85rem;
   margin: 0;
   line-height: 1.4;
@@ -127,7 +128,7 @@
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #e2e8f0;
+  border: 4px solid #475569;
   border-top: 4px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -140,7 +141,7 @@
 }
 
 .loading-container p {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 1.1rem;
   margin: 0;
 }
@@ -203,6 +204,70 @@
   color: #94a3b8;
   margin: 0.5rem 0;
   line-height: 1.5;
+}
+
+/* Light theme styles */
+.App.light-theme .river-header h2 {
+  color: #1e293b;
+}
+
+.App.light-theme .river-stats {
+  color: #64748b;
+}
+
+.App.light-theme .fallback-text {
+  color: #64748b;
+}
+
+.App.light-theme .multi-source-text {
+  color: #64748b;
+}
+
+.App.light-theme .post-count {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.App.light-theme .river-footer {
+  border-top-color: #e2e8f0;
+}
+
+.App.light-theme .disclaimer {
+  color: #64748b;
+}
+
+.App.light-theme .loading-container p {
+  color: #64748b;
+}
+
+.App.light-theme .loading-spinner {
+  border-color: #e2e8f0;
+}
+
+.App.light-theme .error-container {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.App.light-theme .error-container h3 {
+  color: #dc2626;
+}
+
+.App.light-theme .error-container p {
+  color: #7f1d1d;
+}
+
+.App.light-theme .empty-container {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.App.light-theme .empty-container h3 {
+  color: #64748b;
+}
+
+.App.light-theme .empty-container p {
+  color: #94a3b8;
 }
 
 /* Responsive design */

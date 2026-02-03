@@ -6,6 +6,7 @@ import './App.css';
 function App() {
   const [subreddit, setSubreddit] = useState('technology');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
 
   const handleSubredditChange = (newSubreddit) => {
     setSubreddit(newSubreddit);
@@ -15,11 +16,24 @@ function App() {
     setIsLoading(loading);
   };
 
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+  };
+
   return (
-    <div className="App">
+    <div className={`App ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
       <header className="App-header">
-        <h1>Tech Relevance & Sentiment Analyzer</h1>
-        <p>Analyze technology trends and sentiment from Reddit</p>
+        <div className="header-content">
+          <span className="penguin-icon">🐧</span>
+          <h1>Pengwhisp</h1>
+        </div>
+        <button 
+          className="theme-toggle-button"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+        >
+          {isDarkTheme ? '☀️' : '🌙'}
+        </button>
       </header>
       
       <main className="App-main">

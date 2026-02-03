@@ -16,20 +16,22 @@
 .search-input {
   flex: 1;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #475569;
   border-radius: 8px;
   font-size: 1rem;
+  background-color: #1e293b;
+  color: #e2e8f0;
   transition: border-color 0.2s ease;
 }
 
 .search-input:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
 }
 
 .search-input:disabled {
-  background-color: #f1f5f9;
+  background-color: #334155;
   cursor: not-allowed;
 }
 
@@ -59,7 +61,7 @@
 
 .suggestions {
   text-align: center;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.9rem;
 }
 
@@ -69,12 +71,12 @@
 
 .suggestion-button {
   background: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #475569;
   border-radius: 20px;
   padding: 0.25rem 0.75rem;
   margin: 0.25rem;
   font-size: 0.85rem;
-  color: #475569;
+  color: #e2e8f0;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -89,6 +91,30 @@
 .suggestion-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Light theme styles */
+.App.light-theme .search-input {
+  background-color: white;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.App.light-theme .search-input:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.App.light-theme .search-input:disabled {
+  background-color: #f1f5f9;
+}
+
+.App.light-theme .suggestions {
+  color: #64748b;
+}
+
+.App.light-theme .suggestion-button {
+  border-color: #e2e8f0;
+  color: #475569;
 }
 
 /* Responsive design */
